@@ -25,6 +25,8 @@ var _rootSource2 = _interopRequireDefault(_rootSource);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
+function _asyncToGenerator(fn) { return function () { var gen = fn.apply(this, arguments); return new Promise(function (resolve, reject) { function step(key, arg) { try { var info = gen[key](arg); var value = info.value; } catch (error) { reject(error); return; } if (info.done) { resolve(value); } else { return Promise.resolve(value).then(function (value) { step("next", value); }, function (err) { step("throw", err); }); } } return step("next"); }); }; }
+
 /**
  * Adds supplied options to the Apollo options object.
  * @param  {Object} options  Apollo options for the methods used in GrAMPS
@@ -132,16 +134,21 @@ function prepare({
     resolvers
   });
 
-  const getContext = req => {
-    const extra = extraContext(req);
-    return sources.reduce((allContext, source) => {
-      const sourceContext = typeof source.context === 'function' ? source.context(req) : source.context;
+  const getContext = (() => {
+    var _ref = _asyncToGenerator(function* (req) {
+      const extra = yield extraContext(req);
+      const allContext = {};
+      for (const source of sources) {
+        const sourceContext = typeof source.context === 'function' ? yield source.context(req) : source.context;
+        allContext[source.namespace] = _extends({}, extra, sourceContext);
+      }
+      return allContext;
+    });
 
-      return _extends({}, allContext, {
-        [source.namespace]: _extends({}, extra, sourceContext)
-      });
-    }, extra);
-  };
+    return function getContext(_x) {
+      return _ref.apply(this, arguments);
+    };
+  })();
 
   return _extends({
     schema,
@@ -154,5 +161,9 @@ function prepare({
 }
 
 function gramps(...args) {
-  return prepare(...args);
+  const options = prepare(...args);
+
+  return _extends({}, options, {
+    context: ({ req } = {}) => options.context(req)
+  });
 }
