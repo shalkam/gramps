@@ -13,7 +13,7 @@ describe('GrAMPS', () => {
       const next = jest.genMockFn();
       const req = {};
       addContext(req, {}, next);
-      expect(req).toEqual({ gramps: {} });
+      expect(req.gramps).resolves.toEqual({});
       expect(next).toBeCalled();
     });
 
@@ -60,10 +60,15 @@ describe('GrAMPS', () => {
   });
 
   describe('gramps()', () => {
-    it('creates a valid schema and empty context with no arguments', () => {
-      const getGrampsContext = gramps();
-      expect(getGrampsContext.context()).toEqual({});
-      expect(getGrampsContext.schema).toBeInstanceOf(GraphQLSchema);
+    it('creates a valid schema and context with no arguments', () => {
+      const GraphQLOptions = gramps();
+
+      expect(GraphQLOptions).toEqual(
+        expect.objectContaining({
+          schema: expect.any(GraphQLSchema),
+          context: expect.any(Function),
+        }),
+      );
     });
 
     it('warns for use of schema', () => {
@@ -110,8 +115,7 @@ describe('GrAMPS', () => {
       ];
 
       const grampsConfig = gramps({ dataSources, enableMockData: false });
-
-      expect(grampsConfig.context()).toEqual({
+      expect(grampsConfig.context()).resolves.toEqual({
         Foo: {
           foo: 'test',
         },
@@ -130,7 +134,7 @@ describe('GrAMPS', () => {
         extraContext: () => ({ extra: 'context' }),
       });
 
-      expect(grampsConfig.context()).toEqual({
+      expect(grampsConfig.context()).resolves.toEqual({
         FOO: { extra: 'context', source: 'context' },
         extra: 'context',
       });
