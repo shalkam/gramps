@@ -164,6 +164,6 @@ function gramps(...args) {
   const options = prepare(...args);
 
   return _extends({}, options, {
-    context: ({ req } = {}) => options.context(req)
+    context: ({ req, connection } = {}) => options.context({ req, connection })
   });
 }
